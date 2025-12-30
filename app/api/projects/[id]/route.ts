@@ -1,40 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Project from "@/models/Project";
+import Risk from "@/models/Risk";
 import { getAuthUser } from "@/lib/getAuthUser";
 
 type Params = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(req: NextRequest, { params }: Params) {
-  try {
-    const auth = await getAuthUser();
-    if (auth.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const { id } = await params;
-
-    await connectDB();
-
-    const project = await Project.findById(id)
-      .populate("clientId", "name email")
-      .populate("employeeIds", "name email");
-
-    if (!project) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(project);
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-}
-
 export async function PUT(req: NextRequest, { params }: Params) {
   try {
     const auth = await getAuthUser();
+
     if (auth.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -44,11 +20,15 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
     await connectDB();
 
-    const project = await Project.findByIdAndUpdate(id, updates, {
+    const risk = await Risk.findByIdAndUpdate(id, updates, {
       new: true,
     });
 
-    return NextResponse.json(project);
+    if (!risk) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(risk);
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
