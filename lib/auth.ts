@@ -1,20 +1,22 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
-
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET not defined");
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET not defined");
+  }
+  return secret;
 }
 
 export function signToken(payload: { userId: string; role: string }) {
-  return jwt.sign(payload, JWT_SECRET, {
+  return jwt.sign(payload, getJwtSecret(), {
     expiresIn: "7d",
   });
 }
 
 export function verifyToken(token: string) {
-  return jwt.verify(token, JWT_SECRET) as {
+  return jwt.verify(token, getJwtSecret()) as {
     userId: string;
     role: string;
   };

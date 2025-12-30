@@ -1,4 +1,5 @@
 //app/api/projects/route.ts
+export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";

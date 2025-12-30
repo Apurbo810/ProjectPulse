@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+
+
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Feedback from "@/models/Feedback";
