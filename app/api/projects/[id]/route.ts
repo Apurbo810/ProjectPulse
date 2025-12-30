@@ -1,14 +1,11 @@
-//app/api/projects/[id]/route.ts
-
-
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Project from "@/models/Project";
 import { getAuthUser } from "@/lib/getAuthUser";
 
 export async function GET(
-  _: Request,
-  { params }: { params: { id: string } }
+  _: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await getAuthUser();
@@ -17,9 +14,11 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { id } = await params;
+
     await connectDB();
 
-    const project = await Project.findById(params.id)
+    const project = await Project.findById(id)
       .populate("clientId", "name email")
       .populate("employeeIds", "name email");
 
@@ -28,33 +27,33 @@ export async function GET(
     }
 
     return NextResponse.json(project);
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
 
 export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await getAuthUser();
+
     if (auth.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const { id } = await params;
     const updates = await req.json();
 
     await connectDB();
 
-    const project = await Project.findByIdAndUpdate(
-      params.id,
-      updates,
-      { new: true }
-    );
+    const project = await Project.findByIdAndUpdate(id, updates, {
+      new: true,
+    });
 
     return NextResponse.json(project);
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }
