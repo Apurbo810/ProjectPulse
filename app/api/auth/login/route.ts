@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import { comparePassword, signToken } from "@/lib/auth";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
 
@@ -39,23 +39,27 @@ export async function POST(req: Request) {
       role: user.role,
     });
 
-    const response = NextResponse.json({
-      message: "Login successful",
-      role: user.role,
-    });
+    const response = NextResponse.json(
+      {
+        message: "Login successful",
+        role: user.role,
+      },
+      { status: 200 }
+    );
 
     response.cookies.set("token", token, {
       httpOnly: true,
-      secure: false,        // dev only
-      sameSite: "lax",      // ✅ allows Postman
-      path: "/",            // VERY IMPORTANT
+      secure: process.env.NODE_ENV === "production", // ✅ REQUIRED
+      sameSite: "lax",
+      path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
-    
+
     return response;
   } catch (error) {
+    console.error("LOGIN ERROR:", error);
     return NextResponse.json(
-      { error: "Something went wrong" },
+      { error: "Login failed" },
       { status: 500 }
     );
   }
