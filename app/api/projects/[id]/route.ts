@@ -1,14 +1,13 @@
-// app/api/projects/[id]/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Project from "@/models/Project";
 import { getAuthUser } from "@/lib/getAuthUser";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type Params = {
+  params: Promise<{ id: string }>;
+};
+
+export async function GET(req: NextRequest, { params }: Params) {
   try {
     const auth = await getAuthUser();
     if (auth.role !== "admin") {
@@ -16,6 +15,7 @@ export async function GET(
     }
 
     const { id } = await params;
+
     await connectDB();
 
     const project = await Project.findById(id)
@@ -32,18 +32,15 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: Params) {
   try {
     const auth = await getAuthUser();
     if (auth.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const updates = await req.json();
     const { id } = await params;
+    const updates = await req.json();
 
     await connectDB();
 
