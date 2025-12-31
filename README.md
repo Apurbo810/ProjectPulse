@@ -155,4 +155,4 @@ npm run dev
 
 ## live link 
 📎 **live link:**
-[https://forms.gle/xWh86tdyHZ4jGBwW9](https://forms.gle/xWh86tdyHZ4jGBwW9)
+[https://project-pulse-mud9.vercel.app/](https://project-pulse-mud9.vercel.app/)
