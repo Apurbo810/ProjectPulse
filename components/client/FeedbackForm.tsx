@@ -15,23 +15,23 @@ export default function FeedbackForm({ projectId }: { projectId: string }) {
 
     const form = e.currentTarget as any;
 
-    const satisfaction = Number(form.satisfaction.value);
-    const communication = Number(form.communication.value);
-    const comments = form.comments.value.trim();
+    const satisfactionRating = Number(form.satisfaction.value);
+    const communicationRating = Number(form.communication.value);
+    const comment = form.comments.value.trim();
     const flagIssue = form.flagIssue.checked;
 
     // ✅ Validation
-    if (!satisfaction || satisfaction < 1 || satisfaction > 5) {
+    if (!satisfactionRating || satisfactionRating < 1 || satisfactionRating > 5) {
       setError("Please select satisfaction level (1–5)");
       return;
     }
 
-    if (!communication || communication < 1 || communication > 5) {
+    if (!communicationRating || communicationRating < 1 || communicationRating > 5) {
       setError("Please select communication level (1–5)");
       return;
     }
 
-    if (flagIssue && !comments) {
+    if (flagIssue && !comment) {
       setError("Comments are required when flagging an issue");
       return;
     }
@@ -43,17 +43,18 @@ export default function FeedbackForm({ projectId }: { projectId: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         projectId,
-        satisfaction,
-        communication,
-        comments,
+        satisfactionRating,   // ✅ MATCH BACKEND
+        communicationRating,  // ✅ MATCH BACKEND
+        comment,              // ✅ MATCH BACKEND
         flagIssue,
       }),
     });
 
+    const data = await res.json();
     setLoading(false);
 
     if (!res.ok) {
-      setError("Failed to submit feedback");
+      setError(data.error || "Failed to submit feedback");
       return;
     }
 
@@ -66,7 +67,6 @@ export default function FeedbackForm({ projectId }: { projectId: string }) {
       onSubmit={submitFeedback}
       className="bg-white rounded-2xl shadow-lg p-6 space-y-5"
     >
-      {/* Info */}
       <p className="text-xs text-gray-400 text-center">
         Please confirm the project before submitting feedback
       </p>
@@ -94,9 +94,7 @@ export default function FeedbackForm({ projectId }: { projectId: string }) {
         >
           <option value="">Select rating</option>
           {[1, 2, 3, 4, 5].map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
+            <option key={n} value={n}>{n}</option>
           ))}
         </select>
       </div>
@@ -112,9 +110,7 @@ export default function FeedbackForm({ projectId }: { projectId: string }) {
         >
           <option value="">Select rating</option>
           {[1, 2, 3, 4, 5].map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
+            <option key={n} value={n}>{n}</option>
           ))}
         </select>
       </div>
@@ -139,11 +135,7 @@ export default function FeedbackForm({ projectId }: { projectId: string }) {
       </label>
 
       {/* Submit */}
-      <Button
-        type="submit"
-        disabled={loading}
-        className="w-full"
-      >
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? "Submitting..." : "Submit Feedback"}
       </Button>
     </form>
