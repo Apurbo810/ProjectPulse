@@ -1,11 +1,13 @@
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import { comparePassword, signToken } from "@/lib/auth";
 
-export async function POST(req: NextRequest) {
+
+export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
