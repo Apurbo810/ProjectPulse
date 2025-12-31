@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Test() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-red-500 text-white p-8 text-xl space-y-4">
-      <p>Tailwind v4 is WORKING</p>
+      <p>Hello world</p>
 
       <Link
         href="/login"
