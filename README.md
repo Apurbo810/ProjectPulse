@@ -152,3 +152,7 @@ npm run dev
 | **Admin**    | [admin@projectpulse.com](mailto:admin@projectpulse.com)       | admin123    |
 | **Employee** | [employee@projectpulse.com](mailto:employee@projectpulse.com) | employee123 |
 | **Client**   | [client@projectpulse.com](mailto:client@projectpulse.com)     | client123   |
+
+## live link 
+📎 **live link:**
+[https://forms.gle/xWh86tdyHZ4jGBwW9](https://forms.gle/xWh86tdyHZ4jGBwW9)
