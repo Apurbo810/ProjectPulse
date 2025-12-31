@@ -12,20 +12,44 @@ export default function EmployeeRisksPage() {
   const [projectId, setProjectId] = useState("");
   const [title, setTitle] = useState("");
   const [severity, setSeverity] = useState("Medium");
+  const [confidence, setConfidence] = useState("3");
+  const [completion, setCompletion] = useState("");
   const [mitigation, setMitigation] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch("/api/projects")
-      .then(res => res.json())
-      .then(data =>
-        setProjects(Array.isArray(data) ? data : [])
+      .then((res) => res.json())
+      .then((data) =>
+        setProjects(Array.isArray(data) ? data : data.projects ?? [])
       );
   }, []);
+
+  const validateForm = () => {
+    if (!projectId) return "Please select a project";
+    if (!title.trim()) return "Risk title is required";
+    if (!mitigation.trim()) return "Mitigation plan is required";
+
+    const completionNum = Number(completion);
+    if (completion === "")
+      return "Completion percentage is required";
+    if (completionNum < 0 || completionNum > 100)
+      return "Completion must be between 0 and 100";
+
+    return "";
+  };
 
   const submitRisk = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
+    setError("");
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
     const res = await fetch("/api/risks", {
       method: "POST",
@@ -34,6 +58,8 @@ export default function EmployeeRisksPage() {
         projectId,
         title,
         severity,
+        confidenceLevel: Number(confidence),
+        completionPercentage: Number(completion),
         mitigationPlan: mitigation,
       }),
     });
@@ -41,15 +67,19 @@ export default function EmployeeRisksPage() {
     const data = await res.json();
 
     if (!res.ok) {
-      setMessage(data.error || "Failed to report risk");
+      setError(data.error || "Failed to report risk");
       return;
     }
 
     setMessage("⚠️ Risk reported successfully");
-    setTitle("");
-    setMitigation("");
+
+    // Reset form
     setProjectId("");
+    setTitle("");
     setSeverity("Medium");
+    setConfidence("3");
+    setCompletion("");
+    setMitigation("");
   };
 
   return (
@@ -58,13 +88,23 @@ export default function EmployeeRisksPage() {
         Report Project Risk
       </h1>
 
+      {error && (
+        <div className="bg-red-100 text-red-700 px-4 py-2 rounded">
+          {error}
+        </div>
+      )}
+
       {message && (
-        <div className="bg-yellow-100 text-yellow-800 px-3 py-2 rounded">
+        <div className="bg-green-100 text-green-700 px-4 py-2 rounded">
           {message}
         </div>
       )}
 
-      <form onSubmit={submitRisk} className="card p-6 space-y-4">
+      <form
+        onSubmit={submitRisk}
+        className="bg-white rounded-xl shadow-md p-6 space-y-4"
+      >
+        {/* Project */}
         <div>
           <label className="block text-sm font-medium mb-1">
             Project
@@ -76,7 +116,7 @@ export default function EmployeeRisksPage() {
             className="w-full border rounded px-3 py-2"
           >
             <option value="">Select project</option>
-            {projects.map(p => (
+            {projects.map((p) => (
               <option key={p._id} value={p._id}>
                 {p.name}
               </option>
@@ -84,12 +124,12 @@ export default function EmployeeRisksPage() {
           </select>
         </div>
 
+        {/* Title */}
         <div>
           <label className="block text-sm font-medium mb-1">
             Risk Title
           </label>
           <input
-            required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full border rounded px-3 py-2"
@@ -97,6 +137,7 @@ export default function EmployeeRisksPage() {
           />
         </div>
 
+        {/* Severity */}
         <div>
           <label className="block text-sm font-medium mb-1">
             Severity
@@ -112,6 +153,42 @@ export default function EmployeeRisksPage() {
           </select>
         </div>
 
+        {/* Confidence Level */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Confidence Level (1–5)
+          </label>
+          <select
+            value={confidence}
+            onChange={(e) => setConfidence(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+          >
+            <option value="1">1 - Very Low</option>
+            <option value="2">2 - Low</option>
+            <option value="3">3 - Medium</option>
+            <option value="4">4 - High</option>
+            <option value="5">5 - Very High</option>
+          </select>
+        </div>
+
+        {/* Completion % */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Completion %
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            value={completion}
+            onChange={(e) => setCompletion(e.target.value)}
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+            className="w-full border rounded px-3 py-2 appearance-none"
+            placeholder="0 – 100"
+          />
+        </div>
+
+        {/* Mitigation */}
         <div>
           <label className="block text-sm font-medium mb-1">
             Mitigation Plan
@@ -124,7 +201,10 @@ export default function EmployeeRisksPage() {
           />
         </div>
 
-        <button className="btn-primary w-full">
+        <button
+          type="submit"
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded transition"
+        >
           Submit Risk
         </button>
       </form>

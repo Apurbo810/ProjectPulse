@@ -11,6 +11,9 @@ export default function AdminProjectsPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   useEffect(() => {
     fetch("/api/users")
       .then((res) => res.json())
@@ -22,8 +25,36 @@ export default function AdminProjectsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
+    setSuccess("");
 
-    await fetch("/api/projects", {
+    // 🔒 VALIDATION
+    if (!name.trim()) {
+      setError("Project name is required");
+      return;
+    }
+
+    if (!clientId) {
+      setError("Please select a client");
+      return;
+    }
+
+    if (employeeIds.length === 0) {
+      setError("Please assign at least one employee");
+      return;
+    }
+
+    if (!startDate || !endDate) {
+      setError("Start and end dates are required");
+      return;
+    }
+
+    if (new Date(startDate) > new Date(endDate)) {
+      setError("End date cannot be before start date");
+      return;
+    }
+
+    const res = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -36,145 +67,165 @@ export default function AdminProjectsPage() {
       }),
     });
 
-    alert("Project created successfully");
+    if (!res.ok) {
+      setError("Failed to create project");
+      return;
+    }
+
+    // ✅ SUCCESS + RESET
+    setSuccess("Project created successfully");
+
+    setName("");
+    setDescription("");
+    setClientId("");
+    setEmployeeIds([]);
+    setStartDate("");
+    setEndDate("");
   }
 
   return (
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center">
-  <div className="w-full max-w-2xl">
-    <div className="max-w-2xl center">
-      <form
-        onSubmit={handleSubmit}
-        className="rounded-xl bg-white p-8 shadow-sm space-y-6"
-      >
-        {/* Header */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Create Project
-          </h2>
-          <p className="text-sm text-gray-500">
-            Add a new project and assign clients and employees
-          </p>
-        </div>
+      <div className="w-full max-w-2xl">
+        <form
+          onSubmit={handleSubmit}
+          className="rounded-xl bg-white p-8 shadow-sm space-y-6"
+        >
+          {/* Header */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Create Project
+            </h2>
+            <p className="text-sm text-gray-500">
+              Add a new project and assign clients and employees
+            </p>
+          </div>
 
-        {/* Project name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Project Name
-          </label>
-          <input
-            className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Website Revamp Project"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
+          {/* Messages */}
+          {error && (
+            <div className="bg-red-100 text-red-700 px-4 py-2 rounded">
+              {error}
+            </div>
+          )}
 
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Description
-          </label>
-          <textarea
-            className="w-full rounded-md border px-3 py-2 min-h-90px focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Short project description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
+          {success && (
+            <div className="bg-green-100 text-green-700 px-4 py-2 rounded">
+              {success}
+            </div>
+          )}
 
-        {/* Dates */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Project name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Start Date
+              Project Name
             </label>
             <input
-              type="date"
-              className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
+              className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500"
+              placeholder="Website Revamp Project"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
 
+          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              End Date
+              Description
             </label>
-            <input
-              type="date"
-              className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              required
+            <textarea
+              className="w-full rounded-md border px-3 py-2 min-h-[90px] focus:ring-2 focus:ring-blue-500"
+              placeholder="Short project description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-        </div>
 
-        {/* Client */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Client
-          </label>
-          <select
-            className="w-full rounded-md border px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
-            required
-          >
-            <option value="">Select a client</option>
-            {clients.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Employees */}
-        <div>
-          <p className="block text-sm font-medium text-gray-700 mb-2">
-            Assign Employees
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {employees.map((e) => (
-              <label
-                key={e._id}
-                className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  className="accent-blue-600"
-                  checked={employeeIds.includes(e._id)}
-                  onChange={(ev) =>
-                    setEmployeeIds((prev) =>
-                      ev.target.checked
-                        ? [...prev, e._id]
-                        : prev.filter((id) => id !== e._id)
-                    )
-                  }
-                />
-                {e.name}
+          {/* Dates */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Start Date
               </label>
-            ))}
-          </div>
-        </div>
+              <input
+                type="date"
+                className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
 
-        {/* Submit */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 transition"
-          >
-            Create Project
-          </button>
-        </div>
-      </form>
-    </div>
-    </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                className="w-full rounded-md border px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Client */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Client
+            </label>
+            <select
+              className="w-full rounded-md border px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+            >
+              <option value="">Select a client</option>
+              {clients.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Employees */}
+          <div>
+            <p className="block text-sm font-medium text-gray-700 mb-2">
+              Assign Employees
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {employees.map((e) => (
+                <label
+                  key={e._id}
+                  className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    className="accent-blue-600"
+                    checked={employeeIds.includes(e._id)}
+                    onChange={(ev) =>
+                      setEmployeeIds((prev) =>
+                        ev.target.checked
+                          ? [...prev, e._id]
+                          : prev.filter((id) => id !== e._id)
+                      )
+                    }
+                  />
+                  {e.name}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Submit */}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 transition"
+            >
+              Create Project
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

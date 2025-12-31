@@ -5,58 +5,145 @@ import Button from "@/components/ui/Button";
 
 export default function FeedbackForm({ projectId }: { projectId: string }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   async function submitFeedback(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    const form = e.currentTarget as any;
+
+    const satisfaction = Number(form.satisfaction.value);
+    const communication = Number(form.communication.value);
+    const comments = form.comments.value.trim();
+    const flagIssue = form.flagIssue.checked;
+
+    // ✅ Validation
+    if (!satisfaction || satisfaction < 1 || satisfaction > 5) {
+      setError("Please select satisfaction level (1–5)");
+      return;
+    }
+
+    if (!communication || communication < 1 || communication > 5) {
+      setError("Please select communication level (1–5)");
+      return;
+    }
+
+    if (flagIssue && !comments) {
+      setError("Comments are required when flagging an issue");
+      return;
+    }
+
     setLoading(true);
 
-    const form = e.currentTarget;
-    const data = {
-      projectId,
-      satisfaction: Number((form as any).satisfaction.value),
-      communication: Number((form as any).communication.value),
-      comments: (form as any).comments.value,
-      flagIssue: (form as any).flagIssue.checked,
-    };
-
-    await fetch("/api/feedback", {
+    const res = await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        projectId,
+        satisfaction,
+        communication,
+        comments,
+        flagIssue,
+      }),
     });
 
     setLoading(false);
-    alert("Feedback submitted");
+
+    if (!res.ok) {
+      setError("Failed to submit feedback");
+      return;
+    }
+
+    setSuccess("✅ Feedback submitted successfully");
+    form.reset();
   }
 
   return (
-    <form onSubmit={submitFeedback} className="space-y-4 max-w-md">
-      <select name="satisfaction" required className="w-full border p-2">
-        <option value="">Satisfaction (1–5)</option>
-        {[1,2,3,4,5].map(n => (
-          <option key={n} value={n}>{n}</option>
-        ))}
-      </select>
+    <form
+      onSubmit={submitFeedback}
+      className="bg-white rounded-2xl shadow-lg p-6 space-y-5"
+    >
+      {/* Info */}
+      <p className="text-xs text-gray-400 text-center">
+        Please confirm the project before submitting feedback
+      </p>
 
-      <select name="communication" required className="w-full border p-2">
-        <option value="">Communication (1–5)</option>
-        {[1,2,3,4,5].map(n => (
-          <option key={n} value={n}>{n}</option>
-        ))}
-      </select>
+      {error && (
+        <div className="bg-red-100 text-red-700 px-4 py-2 rounded text-sm">
+          {error}
+        </div>
+      )}
 
-      <textarea
-        name="comments"
-        placeholder="Comments (optional)"
-        className="w-full border p-2"
-      />
+      {success && (
+        <div className="bg-green-100 text-green-700 px-4 py-2 rounded text-sm">
+          {success}
+        </div>
+      )}
 
-      <label className="flex items-center gap-2">
+      {/* Satisfaction */}
+      <div>
+        <label className="block text-sm font-medium mb-1">
+          Satisfaction (1–5)
+        </label>
+        <select
+          name="satisfaction"
+          className="w-full border rounded-lg px-3 py-2"
+        >
+          <option value="">Select rating</option>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Communication */}
+      <div>
+        <label className="block text-sm font-medium mb-1">
+          Communication (1–5)
+        </label>
+        <select
+          name="communication"
+          className="w-full border rounded-lg px-3 py-2"
+        >
+          <option value="">Select rating</option>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Comments */}
+      <div>
+        <label className="block text-sm font-medium mb-1">
+          Comments
+        </label>
+        <textarea
+          name="comments"
+          rows={3}
+          className="w-full border rounded-lg px-3 py-2"
+          placeholder="Write your feedback here..."
+        />
+      </div>
+
+      {/* Flag Issue */}
+      <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="flagIssue" />
-        Flag an issue
+        Flag this as an issue
       </label>
 
-      <Button type="submit" disabled={loading}>
+      {/* Submit */}
+      <Button
+        type="submit"
+        disabled={loading}
+        className="w-full"
+      >
         {loading ? "Submitting..." : "Submit Feedback"}
       </Button>
     </form>

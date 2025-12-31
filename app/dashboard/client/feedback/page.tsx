@@ -1,33 +1,77 @@
-import ClientNavbar from "@/components/client/ClientNavbar";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import FeedbackForm from "@/components/client/FeedbackForm";
 
-interface Props {
-  searchParams: Promise<{
-    projectId?: string;
-  }>;
-}
+type Project = {
+  _id: string;
+  name: string;
+};
 
-export default async function ClientFeedbackPage({ searchParams }: Props) {
-  const { projectId } = await searchParams;
+export default function ClientFeedbackPage() {
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
 
-  if (!projectId) {
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!projectId) {
+      setError("Project not selected");
+      setLoading(false);
+      return;
+    }
+
+    fetch(`/api/projects/${projectId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load project");
+        return res.json();
+      })
+      .then((data) => {
+        setProject(data.project ?? data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Unable to load project details");
+        setLoading(false);
+      });
+  }, [projectId]);
+
+  if (loading) {
     return (
-      <>
-        <ClientNavbar />
-        <div className="p-6">
-          <p className="text-red-600">Project ID is missing.</p>
-        </div>
-      </>
+      <div className="text-center text-gray-500 py-10">
+        Loading project…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto bg-red-100 text-red-700 p-4 rounded-lg">
+        {error}
+      </div>
     );
   }
 
   return (
-    <>
-      <ClientNavbar />
-      <main className="p-6">
-        <h2 className="text-2xl font-bold mb-4">Submit Weekly Feedback</h2>
-        <FeedbackForm projectId={projectId} />
-      </main>
-    </>
+    <div className="max-w-xl mx-auto space-y-6">
+      {/* ✅ PROJECT CONTEXT CARD */}
+      <div className="rounded-2xl bg-white/80 backdrop-blur border border-gray-200 shadow-sm p-6">
+        <h1 className="text-xl font-semibold text-gray-900">
+          Feedback for{" "}
+          <span className="text-blue-600">
+            {project?.name}
+          </span>
+        </h1>
+        <p className="text-sm text-gray-500 mt-1">
+          You are submitting feedback for this project
+        </p>
+      </div>
+
+      {/* Feedback Form */}
+      <FeedbackForm projectId={projectId!} />
+    </div>
   );
 }

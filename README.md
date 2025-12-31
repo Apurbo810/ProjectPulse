@@ -120,22 +120,23 @@ npm install
 Create `.env.local`:
 
 ```env
-MONGODB_URI=your_mongodb_atlas_connection_string
-JWT_SECRET=your_jwt_secret
+MONGODB_URI=your_mongodb_atlas_connection_string (https://www.youtube.com/watch?v=-AQZuPL1hD0)
+JWT_SECRET=supersecretkey123
 ```
 
 ### 4️⃣ Seed Demo Users
 
+To reset the entire database and reseed demo users/projects:
 ```bash
-POST /api/seed
+http://localhost:3000/api/seed/reset
 ```
 
 This creates:
+• 1 Admin
+• 4 Employees
+• 3 Clients
+• Multiple demo projects with assignments
 
-* Admin
-* Employee
-* Client
-* Sample project with assignments
 
 ### 5️⃣ Run Development Server
 
@@ -145,13 +146,38 @@ npm run dev
 
 ---
 
+
 ## 🧪 Demo Login Credentials
 
-| Role         | Email                                                         | Password    |
-| ------------ | ------------------------------------------------------------- | ----------- |
-| **Admin**    | [admin@projectpulse.com](mailto:admin@projectpulse.com)       | admin123    |
-| **Employee** | [employee@projectpulse.com](mailto:employee@projectpulse.com) | employee123 |
-| **Client**   | [client@projectpulse.com](mailto:client@projectpulse.com)     | client123   |
+### 👑 Admin
+
+| Role  | Email                                                   | Password |
+| ----- | ------------------------------------------------------- | -------- |
+| Admin | [admin@projectpulse.com](mailto:admin@projectpulse.com) | admin123 |
+
+---
+
+### 👷 Employees (4)
+
+| Role     | Email                                                           | Password    |
+| -------- | --------------------------------------------------------------- | ----------- |
+| Employee | [employee1@projectpulse.com](mailto:employee1@projectpulse.com) | employee123 |
+| Employee | [employee2@projectpulse.com](mailto:employee2@projectpulse.com) | employee123 |
+| Employee | [employee3@projectpulse.com](mailto:employee3@projectpulse.com) | employee123 |
+| Employee | [employee4@projectpulse.com](mailto:employee4@projectpulse.com) | employee123 |
+
+---
+
+### 🧑‍💼 Clients (3)
+
+| Role   | Email                                                       | Password  |
+| ------ | ----------------------------------------------------------- | --------- |
+| Client | [client1@projectpulse.com](mailto:client1@projectpulse.com) | client123 |
+| Client | [client2@projectpulse.com](mailto:client2@projectpulse.com) | client123 |
+| Client | [client3@projectpulse.com](mailto:client3@projectpulse.com) | client123 |
+
+---
+
 
 ## live link 
 📎 **live link:**

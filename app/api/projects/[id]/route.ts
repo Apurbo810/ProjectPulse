@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Risk from "@/models/Risk";
+import Project from "@/models/Project";
 import { getAuthUser } from "@/lib/getAuthUser";
 
 export async function GET(
@@ -12,55 +12,57 @@ export async function GET(
   try {
     const auth = await getAuthUser();
 
-    if (!auth || auth.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!auth) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
+    // ✅ IMPORTANT FIX
     const { id } = await params;
 
     await connectDB();
 
-    const risk = await Risk.findById(id);
+    const project = await Project.findById(id).lean();
 
-    if (!risk) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!project) {
+      return NextResponse.json(
+        { error: "Project not found" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(risk, { status: 200 });
+    // 🔐 Client access control
+    if (
+      auth.role === "client" &&
+      project.clientId.toString() !== auth.userId
+    ) {
+      return NextResponse.json(
+        { error: "Forbidden" },
+        { status: 403 }
+      );
+    }
+
+    // 🔐 Employee access control
+    if (
+      auth.role === "employee" &&
+      !project.employeeIds
+        .map((eid: any) => eid.toString())
+        .includes(auth.userId)
+    ) {
+      return NextResponse.json(
+        { error: "Forbidden" },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.json(project, { status: 200 });
   } catch (error) {
-    console.error("GET risk error:", error);
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-}
-
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const auth = await getAuthUser();
-
-    if (!auth || auth.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const { id } = await params;
-    const updates = await req.json();
-
-    await connectDB();
-
-    const risk = await Risk.findByIdAndUpdate(id, updates, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!risk) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
-    return NextResponse.json(risk, { status: 200 });
-  } catch (error) {
-    console.error("PUT risk error:", error);
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    console.error("GET project by id error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch project" },
+      { status: 500 }
+    );
   }
 }
