@@ -1,9 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import Button from "@/components/ui/Button";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function ClientNavbar() {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+  };
+  
   return (
     <nav className="flex items-center justify-between px-6 py-4 border-b">
       <h1 className="text-xl font-bold">ProjectPulse</h1>
@@ -16,9 +24,13 @@ export default function ClientNavbar() {
           Dashboard
         </Link>
 
-        <form action="/api/auth/logout" method="POST">
-          <Button type="submit">Logout</Button>
-        </form>
+        <button
+            onClick={logout}
+            className="ml-6 rounded-md border border-red-200 px-4 py-1.5 text-sm text-red-600 hover:bg-red-50 transition"
+          >
+            Logout
+          </button>
+
       </div>
     </nav>
   );
